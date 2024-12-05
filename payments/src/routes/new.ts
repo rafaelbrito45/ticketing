@@ -4,8 +4,8 @@ import {
   requireAuth,
   validateRequest,
   BadRequestError,
-  NotFoundError,
   NotAuthorizedError,
+  NotFoundError,
   OrderStatus,
 } from "@rafaeltickets/common";
 import { stripe } from "../stripe";
@@ -15,7 +15,7 @@ import { PaymentCreatedPublisher } from "../events/publishers/payment-created-pu
 import { natsWrapper } from "../nats-wrapper";
 
 const router = express.Router();
-// token for testing puposes tok_visa
+
 router.post(
   "/api/payments",
   requireAuth,
@@ -33,7 +33,7 @@ router.post(
       throw new NotAuthorizedError();
     }
     if (order.status === OrderStatus.Cancelled) {
-      throw new BadRequestError("Cannot pay for a cancelled order");
+      throw new BadRequestError("Cannot pay for an cancelled order");
     }
 
     const charge = await stripe.charges.create({
@@ -41,7 +41,6 @@ router.post(
       amount: order.price * 100,
       source: token,
     });
-
     const payment = Payment.build({
       orderId,
       stripeId: charge.id,
